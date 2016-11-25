@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -9,42 +8,36 @@
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar" />
 
+    <Spinner
+        android:id="@+id/spinner_music"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:spinnerMode="dialog"/>
+
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/action_list"
+        android:id="@+id/source_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:orientation="horizontal"
         android:padding="3dp">
 
         <Button
-            android:id="@+id/add_button"
+            android:id="@+id/add_new_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+1" />
+            android:text="Add" />
 
         <Button
-            android:id="@+id/add8_button"
+            android:id="@+id/save_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+8" />
+            android:layout_alignParentEnd="true"
+            android:text="Save &amp; Exit" />
 
-        <Button
-            android:id="@+id/clear_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="Clear" />
+    </RelativeLayout>
 
-        <Button
-            android:id="@+id/play_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="Play" />
-    </LinearLayout>
 </LinearLayout>

@@ -18,6 +18,19 @@ public class TabataConfig {
     @SerializedName("actions")
     List<TabataAction> actions;
 
+    public TabataConfig(String music, List<TabataAction> actions) {
+        this.music = music;
+        this.actions = actions;
+    }
+
+    public void setMusic(String music) {
+        this.music = music;
+    }
+
+    public void setActions(List<TabataAction> actions) {
+        this.actions = actions;
+    }
+
     public String getMusic() {
         return music;
     }

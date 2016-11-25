@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">動作列表產生器</string>
+    <string name="edit_mode_title">編輯模式</string>
 </resources>
