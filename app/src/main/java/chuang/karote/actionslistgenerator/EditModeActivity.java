@@ -60,17 +60,17 @@ public class EditModeActivity extends AppCompatActivity {
 
         readSourceFile();
 
-        final Spinner spinner = (Spinner) findViewById(R.id.spinner_music);
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(EditModeActivity.this, android.R.layout.simple_spinner_item, songList);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
+        final Spinner musicSpinner = (Spinner) findViewById(R.id.spinner_music);
+        ArrayAdapter<String> musicSpinnerAdapter = new ArrayAdapter<>(EditModeActivity.this, android.R.layout.simple_spinner_item, songList);
+        musicSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        musicSpinner.setAdapter(musicSpinnerAdapter);
         for (int i = 0; i < songList.length; i++) {
             if (selectMusic.equals(songList[i])) {
-                spinner.setSelection(i);
+                musicSpinner.setSelection(i);
                 break;
             }
         }
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if (i == 0) {
