@@ -5,7 +5,17 @@
     tools:context=".MainActivity">
     <item
         android:id="@+id/action_edit"
-        android:icon="@android:drawable/ic_menu_edit"
+        android:icon="@drawable/menu_action_edit_icon"
         android:title="@string/edit_mode_title"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_save"
+        android:icon="@drawable/menu_action_save_icon"
+        android:title="@string/action_save"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_load"
+        android:icon="@drawable/menu_action_load_icon"
+        android:title="@string/action_load"
         app:showAsAction="ifRoom" />
 </menu>
