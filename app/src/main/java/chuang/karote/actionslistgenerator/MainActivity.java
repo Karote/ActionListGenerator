@@ -15,14 +15,12 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -46,6 +44,7 @@ import chuang.karote.actionslistgenerator.model.SavedActionList;
 import chuang.karote.actionslistgenerator.model.TabataAction;
 import chuang.karote.actionslistgenerator.model.TabataConfig;
 import chuang.karote.actionslistgenerator.sqlite.SavedActionListDataAccessObject;
+import chuang.karote.actionslistgenerator.ui.ClearableAutoCompleteTextView;
 import utility.Util;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -65,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button add8Button;
     private Button clearButton;
     private Button playButton;
-    private AutoCompleteTextView autoCompleteTextView;
+    private ClearableAutoCompleteTextView autoCompleteTextView;
     private ArrayList<TabataAction> actionList;
     private ActionsListAdapter actionsListAdapter;
     private Button addButton;
@@ -408,7 +407,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-        autoCompleteTextView = (AutoCompleteTextView) findViewById(R.id.search_ac_textview);
+        autoCompleteTextView = (ClearableAutoCompleteTextView) findViewById(R.id.search_ac_textview);
         addButton = (Button) findViewById(R.id.add_button);
         actionsListRecyclerView = (RecyclerView) findViewById(R.id.action_list);
         add1Button = (Button) findViewById(R.id.add_1_button);

@@ -16,7 +16,7 @@
         android:focusableInTouchMode="true"
         android:orientation="horizontal">
 
-        <AutoCompleteTextView
+        <chuang.karote.actionslistgenerator.ui.ClearableAutoCompleteTextView
             android:id="@+id/search_ac_textview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
