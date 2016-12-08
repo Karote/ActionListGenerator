@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">動作列表產生器</string>
     <string name="edit_mode_title">編輯模式</string>
+    <string name="multi_select_mode_title">多選模式</string>
     <string name="action_save">儲存</string>
     <string name="action_load">讀取</string>
     <string name="save_list_name_dialog_title">請輸入名稱</string>

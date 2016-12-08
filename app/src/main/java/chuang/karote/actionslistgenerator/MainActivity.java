@@ -157,6 +157,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         actionList = new ArrayList<>();
+        if (savedInstanceState != null) {
+            actionList = savedInstanceState.getParcelableArrayList("actionList");
+        }
         actionsListAdapter = new ActionsListAdapter(actionList);
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
             @Override
@@ -218,6 +221,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         savedActionListDAO.close();
         super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("actionList", actionList);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
