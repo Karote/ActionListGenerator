@@ -3,6 +3,7 @@ package chuang.karote.actionslistgenerator;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
@@ -21,8 +22,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -38,8 +42,10 @@ import java.util.List;
 import java.util.Random;
 
 import chuang.karote.actionslistgenerator.adapter.ActionsListAdapter;
+import chuang.karote.actionslistgenerator.adapter.CheckListAdapter;
 import chuang.karote.actionslistgenerator.adapter.ContainsFilterArrayAdapter;
 import chuang.karote.actionslistgenerator.adapter.SavedActionListAdapter;
+import chuang.karote.actionslistgenerator.adapter.SelectedListAdapter;
 import chuang.karote.actionslistgenerator.model.SavedActionList;
 import chuang.karote.actionslistgenerator.model.TabataAction;
 import chuang.karote.actionslistgenerator.model.TabataConfig;
@@ -73,6 +79,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean menuSaveItemStatus = false;
     private boolean menuLoadItemStatus = true;
     private SavedActionListDataAccessObject savedActionListDAO;
+
+    private RecyclerView selectedListRecyclerView;
+    private SelectedListAdapter selectedListAdapter;
+    private ListView checkListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionList = new ArrayList<>();
         if (savedInstanceState != null) {
             actionList = savedInstanceState.getParcelableArrayList("actionList");
+            resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
         }
         actionsListAdapter = new ActionsListAdapter(actionList);
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
@@ -175,42 +186,82 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 resourceMap.put(actionList.get(position).getName(), false);
                 actionList.remove(position);
                 actionsListAdapter.notifyDataSetChanged();
+                selectedListAdapter.notifyDataSetChanged();
 
-                if (actionList.size() < 8) {
-                    add1Button.setEnabled(true);
-                    add8Button.setEnabled(true);
-                    autoCompleteTextView.setEnabled(true);
-                }
+//                if (actionList.size() < 8) {
+//                    add1Button.setEnabled(true);
+//                    add8Button.setEnabled(true);
+//                    autoCompleteTextView.setEnabled(true);
+//                }
                 if (actionList.size() == 0) {
                     mp.seekTo(0);
-                    clearButton.setEnabled(false);
-                    playButton.setEnabled(false);
-                    menuSaveItemStatus = false;
-                    invalidateOptionsMenu();
+//                    clearButton.setEnabled(false);
+//                    playButton.setEnabled(false);
+//                    menuSaveItemStatus = false;
+//                    invalidateOptionsMenu();
                 }
+                updateButtonStatus();
             }
         });
         actionsListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         actionsListRecyclerView.setAdapter(actionsListAdapter);
 
+        selectedListAdapter = new SelectedListAdapter(actionList);
+        selectedListAdapter.setOnItemClickListener(new SelectedListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getDescription());
+            }
+        });
+        selectedListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        selectedListRecyclerView.setAdapter(selectedListAdapter);
+
+        CheckListAdapter checkListAdapter = new CheckListAdapter(MainActivity.this, resourceList, resourceMap);
+        checkListView.setAdapter(checkListAdapter);
+        checkListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                CheckedTextView chkItem = (CheckedTextView) view.findViewById(R.id.action_name);
+                if (actionList.size() > 7 && !chkItem.isChecked()) {
+                    return;
+                }
+                chkItem.setChecked(!chkItem.isChecked());
+                resourceMap.put(resourceList.get(i).getName(), chkItem.isChecked());
+                if (chkItem.isChecked()) {
+                    addActionItemToActionList(resourceList.get(i));
+                } else {
+                    for (int i1 = 0; i1 < actionList.size(); i1++) {
+                        if (actionList.get(i1).getName().equals(resourceList.get(i).getName())) {
+                            actionList.remove(i1);
+                            actionsListAdapter.notifyDataSetChanged();
+                            selectedListAdapter.notifyDataSetChanged();
+                            return;
+                        }
+                    }
+                }
+            }
+        });
+
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                if (actionList.size() < 8) {
-                    add1Button.setEnabled(true);
-                    add8Button.setEnabled(true);
-                    autoCompleteTextView.setEnabled(true);
-                }
-                if (!actionList.isEmpty()) {
-                    clearButton.setEnabled(true);
-                }
+//                if (actionList.size() < 8) {
+//                    add1Button.setEnabled(true);
+//                    add8Button.setEnabled(true);
+//                    autoCompleteTextView.setEnabled(true);
+//                }
+//                if (!actionList.isEmpty()) {
+//                    clearButton.setEnabled(true);
+//                }
                 playButton.setText("Play");
-                menuLoadItemStatus = true;
-                invalidateOptionsMenu();
+//                menuLoadItemStatus = true;
+//                invalidateOptionsMenu();
+                updateButtonStatus();
             }
         });
 
+        updateButtonStatus();
     }
 
     @Override
@@ -226,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("actionList", actionList);
+        outState.putSerializable("resourceMap", resourceMap);
         super.onSaveInstanceState(outState);
     }
 
@@ -251,42 +303,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.add_1_button:
                 addActionItemToActionList(getActionItemInRandom());
 
-                if (actionList.size() > 7) {
-                    add1Button.setEnabled(false);
-                    add8Button.setEnabled(false);
-                    autoCompleteTextView.setEnabled(false);
-                }
-                if (!clearButton.isEnabled()) {
-                    clearButton.setEnabled(true);
-                }
-                if (!playButton.isEnabled() && canPlay) {
-                    playButton.setEnabled(true);
-                }
-                if (!menuSaveItemStatus) {
-                    menuSaveItemStatus = true;
-                    invalidateOptionsMenu();
-                }
-                return;
+//                if (actionList.size() > 7) {
+//                    add1Button.setEnabled(false);
+//                    add8Button.setEnabled(false);
+//                    autoCompleteTextView.setEnabled(false);
+//                }
+//                if (!clearButton.isEnabled()) {
+//                    clearButton.setEnabled(true);
+//                }
+//                if (!playButton.isEnabled() && canPlay) {
+//                    playButton.setEnabled(true);
+//                }
+//                if (!menuSaveItemStatus) {
+//                    menuSaveItemStatus = true;
+//                    invalidateOptionsMenu();
+//                }
+                break;
             case R.id.add_8_button:
                 while (actionList.size() < 8) {
                     actionList.add(getActionItemInRandom());
                 }
                 actionsListAdapter.notifyDataSetChanged();
+                selectedListAdapter.notifyDataSetChanged();
 
-                add1Button.setEnabled(false);
-                add8Button.setEnabled(false);
-                autoCompleteTextView.setEnabled(false);
-                if (!clearButton.isEnabled()) {
-                    clearButton.setEnabled(true);
-                }
-                if (!playButton.isEnabled() && canPlay) {
-                    playButton.setEnabled(true);
-                }
-                if (!menuSaveItemStatus) {
-                    menuSaveItemStatus = true;
-                    invalidateOptionsMenu();
-                }
-                return;
+//                add1Button.setEnabled(false);
+//                add8Button.setEnabled(false);
+//                autoCompleteTextView.setEnabled(false);
+//                if (!clearButton.isEnabled()) {
+//                    clearButton.setEnabled(true);
+//                }
+//                if (!playButton.isEnabled() && canPlay) {
+//                    playButton.setEnabled(true);
+//                }
+//                if (!menuSaveItemStatus) {
+//                    menuSaveItemStatus = true;
+//                    invalidateOptionsMenu();
+//                }
+                break;
             case R.id.clear_button:
                 mp.seekTo(0);
                 mp.pause();
@@ -295,48 +348,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 actionList.clear();
                 actionsListAdapter.notifyDataSetChanged();
+                selectedListAdapter.notifyDataSetChanged();
 
-                clearButton.setEnabled(false);
-                playButton.setEnabled(false);
-                if (!add1Button.isEnabled()) {
-                    add1Button.setEnabled(true);
-                }
-                if (!add8Button.isEnabled()) {
-                    add8Button.setEnabled(true);
-                }
-                if (!autoCompleteTextView.isEnabled()) {
-                    autoCompleteTextView.setEnabled(true);
-                }
-                if (menuSaveItemStatus) {
-                    menuSaveItemStatus = false;
-                    invalidateOptionsMenu();
-                }
-                return;
+//                clearButton.setEnabled(false);
+//                playButton.setEnabled(false);
+//                if (!add1Button.isEnabled()) {
+//                    add1Button.setEnabled(true);
+//                }
+//                if (!add8Button.isEnabled()) {
+//                    add8Button.setEnabled(true);
+//                }
+//                if (!autoCompleteTextView.isEnabled()) {
+//                    autoCompleteTextView.setEnabled(true);
+//                }
+//                if (menuSaveItemStatus) {
+//                    menuSaveItemStatus = false;
+//                    invalidateOptionsMenu();
+//                }
+                break;
             case R.id.play_button:
                 if (!mp.isPlaying()) {
-                    add1Button.setEnabled(false);
-                    add8Button.setEnabled(false);
-                    clearButton.setEnabled(false);
-                    menuLoadItemStatus = false;
-                    invalidateOptionsMenu();
-                    autoCompleteTextView.setEnabled(false);
+//                    add1Button.setEnabled(false);
+//                    add8Button.setEnabled(false);
+//                    clearButton.setEnabled(false);
+//                    menuLoadItemStatus = false;
+//                    invalidateOptionsMenu();
+//                    autoCompleteTextView.setEnabled(false);
                     playButton.setText("Pause");
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     mp.start();
                 } else {
-                    if (actionList.size() < 8) {
-                        add1Button.setEnabled(true);
-                        add8Button.setEnabled(true);
-                        autoCompleteTextView.setEnabled(true);
-                    }
-                    clearButton.setEnabled(true);
-                    menuLoadItemStatus = true;
-                    invalidateOptionsMenu();
+//                    if (actionList.size() < 8) {
+//                        add1Button.setEnabled(true);
+//                        add8Button.setEnabled(true);
+//                        autoCompleteTextView.setEnabled(true);
+//                    }
+//                    clearButton.setEnabled(true);
+//                    menuLoadItemStatus = true;
+//                    invalidateOptionsMenu();
                     playButton.setText("Play");
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
                     mp.pause();
                 }
-                return;
+                break;
             case R.id.add_button:
                 if (actionList.size() > 7)
                     return;
@@ -351,22 +407,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
 
-                if (actionList.size() > 7) {
-                    add1Button.setEnabled(false);
-                    add8Button.setEnabled(false);
-                    autoCompleteTextView.setEnabled(false);
-                }
-                if (!clearButton.isEnabled()) {
-                    clearButton.setEnabled(true);
-                }
-                if (!playButton.isEnabled() && canPlay) {
-                    playButton.setEnabled(true);
-                }
-                if (!menuSaveItemStatus) {
-                    menuSaveItemStatus = true;
-                    invalidateOptionsMenu();
-                }
+//                if (actionList.size() > 7) {
+//                    add1Button.setEnabled(false);
+//                    add8Button.setEnabled(false);
+//                    autoCompleteTextView.setEnabled(false);
+//                }
+//                if (!clearButton.isEnabled()) {
+//                    clearButton.setEnabled(true);
+//                }
+//                if (!playButton.isEnabled() && canPlay) {
+//                    playButton.setEnabled(true);
+//                }
+//                if (!menuSaveItemStatus) {
+//                    menuSaveItemStatus = true;
+//                    invalidateOptionsMenu();
+//                }
         }
+        updateButtonStatus();
     }
 
     private void readConfig() {
@@ -419,6 +476,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         autoCompleteTextView = (ClearableAutoCompleteTextView) findViewById(R.id.search_ac_textview);
         addButton = (Button) findViewById(R.id.add_button);
         actionsListRecyclerView = (RecyclerView) findViewById(R.id.action_list);
+        selectedListRecyclerView = (RecyclerView) findViewById(R.id.selected_list);
+        checkListView = (ListView) findViewById(R.id.check_list);
         add1Button = (Button) findViewById(R.id.add_1_button);
         add8Button = (Button) findViewById(R.id.add_8_button);
         clearButton = (Button) findViewById(R.id.clear_button);
@@ -435,6 +494,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionList.add(actionItem);
         actionsListAdapter.notifyDataSetChanged();
         actionsListRecyclerView.smoothScrollToPosition(actionList.size());
+        selectedListAdapter.notifyDataSetChanged();
+        selectedListRecyclerView.smoothScrollToPosition(actionList.size());
     }
 
     private TabataAction getActionItemInRandom() {
@@ -542,30 +603,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         savedActionListDAO.insert(savedActionList);
     }
 
-//    private void updateButtonStatus() {
-//        if (mp.isPlaying()) {
-//            add1Button.setEnabled(false);
-//            add8Button.setEnabled(false);
-//            clearButton.setEnabled(false);
-//            menuLoadItemStatus = false;
-//        } else {
-//            menuLoadItemStatus = true;
-//            if (actionList.isEmpty()) {
-//                add1Button.setEnabled(true);
-//                add8Button.setEnabled(true);
-//                clearButton.setEnabled(false);
-//                playButton.setEnabled(false);
-//                menuSaveItemStatus = false;
-//            } else {
-//                clearButton.setEnabled(true);
-//                menuSaveItemStatus = true;
-//                if (canPlay) {
-//                    playButton.setEnabled(true);
-//                }
-//                add1Button.setEnabled(actionList.size() < 8);
-//                add8Button.setEnabled(actionList.size() < 8);
-//            }
-//        }
-//        invalidateOptionsMenu();
-//    }
+    private void updateButtonStatus() {
+        boolean add1BtnStatus = (actionList.size() < 8) && (!mp.isPlaying());
+        boolean add8BtnStatus = (actionList.size() < 8) && (!mp.isPlaying());
+        boolean clearBtnStatus = (actionList.size() > 0) && (!mp.isPlaying());
+        boolean playBtnStatus = (actionList.size() > 0) && canPlay;
+        boolean autoCompleteTextStatus = (actionList.size() < 8) && (!mp.isPlaying());
+        menuSaveItemStatus = (actionList.size() > 0);
+        menuLoadItemStatus = !mp.isPlaying();
+
+        add1Button.setEnabled(add1BtnStatus);
+        add8Button.setEnabled(add8BtnStatus);
+        clearButton.setEnabled(clearBtnStatus);
+        playButton.setEnabled(playBtnStatus);
+        autoCompleteTextView.setEnabled(autoCompleteTextStatus);
+
+        invalidateOptionsMenu();
+    }
 }
