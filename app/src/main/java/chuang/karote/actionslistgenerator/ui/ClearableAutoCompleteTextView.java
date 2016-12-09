@@ -93,7 +93,7 @@ public class ClearableAutoCompleteTextView extends AppCompatAutoCompleteTextView
 
 
     private void init(final Context context) {
-        final Drawable drawable = ContextCompat.getDrawable(context, android.support.v7.appcompat.R.drawable.abc_ic_clear_material);
+        final Drawable drawable = ContextCompat.getDrawable(context, android.R.drawable.ic_delete);
         final Drawable wrappedDrawable = DrawableCompat.wrap(drawable); //Wrap the drawable so that it can be tinted pre Lollipop
         DrawableCompat.setTint(wrappedDrawable, getCurrentHintTextColor());
         mClearTextIcon = wrappedDrawable;
