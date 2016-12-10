@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="40dp"
+        android:height="40dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="2dp"
+                android:color="@android:color/white" />
+            <solid android:color="@android:color/black" />
+        </shape>
+    </item>
+    <item>
+        <bitmap android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tintMode="multiply"
+            android:tint="@android:color/white"/>
+    </item>
+</layer-list>

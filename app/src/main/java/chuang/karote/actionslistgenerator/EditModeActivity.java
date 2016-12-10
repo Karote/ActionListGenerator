@@ -91,11 +91,11 @@ public class EditModeActivity extends AppCompatActivity {
         }
 
         RecyclerView sourceRecyclerView = (RecyclerView) findViewById(R.id.source_list);
-        adapter = new ActionsListAdapter(resourceList);
+        adapter = new ActionsListAdapter(resourceList, ActionsListAdapter.ADAPTER_MODE_EDIT);
         adapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-
+                showEditDialog(position);
             }
 
             @Override
@@ -198,6 +198,31 @@ public class EditModeActivity extends AppCompatActivity {
                 } else {
                     Util.showShortToast(EditModeActivity.this, "名稱不得為空");
                 }
+            }
+        });
+    }
+
+    private void showEditDialog(final int resourceIndex) {
+        final Dialog editDialog = new Dialog(this);
+        editDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        editDialog.setCanceledOnTouchOutside(true);
+        editDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        editDialog.setContentView(R.layout.popupdialog_add_action_item);
+        editDialog.show();
+
+        final EditText actionName = (EditText) editDialog.findViewById(R.id.edit_text_action_name);
+        final EditText actionDescription = (EditText) editDialog.findViewById(R.id.edit_text_action_description);
+
+        actionName.setText(resourceList.get(resourceIndex).getName());
+        actionName.setEnabled(false);
+        actionDescription.setText(resourceList.get(resourceIndex).getDescription());
+        editDialog.findViewById(R.id.button_add_action_item_ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TabataAction newAction = new TabataAction(resourceList.get(resourceIndex).getName(), actionDescription.getText().toString());
+                resourceList.set(resourceIndex, newAction);
+                adapter.notifyDataSetChanged();
+                editDialog.dismiss();
             }
         });
     }

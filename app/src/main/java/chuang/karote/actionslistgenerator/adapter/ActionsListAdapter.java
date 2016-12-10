@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -18,10 +18,15 @@ import chuang.karote.actionslistgenerator.model.TabataAction;
  */
 
 public class ActionsListAdapter extends RecyclerView.Adapter<ActionsListAdapter.ActionsListViewHolder> {
-    private List<TabataAction> mActionsList;
+    public static int ADAPTER_MODE_LIST = 0;
+    public static int ADAPTER_MODE_EDIT = 1;
 
-    public ActionsListAdapter(List<TabataAction> actionsList) {
+    private List<TabataAction> mActionsList;
+    private int mAdapterMode;
+
+    public ActionsListAdapter(List<TabataAction> actionsList, int adapterMode) {
         this.mActionsList = actionsList;
+        this.mAdapterMode = adapterMode;
     }
 
     public interface OnItemClickListener {
@@ -38,7 +43,9 @@ public class ActionsListAdapter extends RecyclerView.Adapter<ActionsListAdapter.
 
     @Override
     public ActionsListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ActionsListViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.action_list_item, parent, false));
+        return mAdapterMode == 0
+                ? new ActionsListViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.action_list_item, parent, false))
+                : new ActionsListViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.edit_list_item, parent, false));
     }
 
     @Override
@@ -68,7 +75,7 @@ public class ActionsListAdapter extends RecyclerView.Adapter<ActionsListAdapter.
         final RelativeLayout itemLayout;
         final TextView itemNumber;
         final TextView actionName;
-        final Button deleteButton;
+        final ImageButton deleteButton;
 
         public ActionsListViewHolder(View itemView) {
             super(itemView);
@@ -76,7 +83,7 @@ public class ActionsListAdapter extends RecyclerView.Adapter<ActionsListAdapter.
             itemLayout = (RelativeLayout) itemView.findViewById(R.id.action_item);
             itemNumber = (TextView) itemView.findViewById(R.id.item_number);
             actionName = (TextView) itemView.findViewById(R.id.action_name);
-            deleteButton = (Button) itemView.findViewById(R.id.delete_button);
+            deleteButton = (ImageButton) itemView.findViewById(R.id.delete_button);
         }
     }
 }

@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             actionList = savedInstanceState.getParcelableArrayList("actionList");
             resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
         }
-        actionsListAdapter = new ActionsListAdapter(actionList);
+        actionsListAdapter = new ActionsListAdapter(actionList, ActionsListAdapter.ADAPTER_MODE_LIST);
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showDetailDialog(String actionName, String description) {
-        Dialog detailDialog = new Dialog(this);
+        final Dialog detailDialog = new Dialog(this);
         detailDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         detailDialog.setCanceledOnTouchOutside(true);
         detailDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -517,6 +517,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ((TextView) detailDialog.findViewById(R.id.action_name)).setText(actionName);
         ((TextView) detailDialog.findViewById(R.id.description_text)).setText(description);
         detailDialog.show();
+
+        detailDialog.findViewById(R.id.close_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                detailDialog.dismiss();
+            }
+        });
     }
 
     private void showSaveListNameDialog() {
@@ -529,6 +536,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onClick(DialogInterface dialog, int which) {
                         String listName = ((EditText) saveListNameView.findViewById(R.id.save_list_name_edit_text)).getText().toString();
                         saveCurrentListToSqlite(listName);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        
                     }
                 })
                 .show();
@@ -576,6 +589,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         listRecyclerView.setAdapter(listAdapter);
+
+        loadListDialog.findViewById(R.id.close_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                loadListDialog.dismiss();
+            }
+        });
 
         loadListDialog.show();
     }
