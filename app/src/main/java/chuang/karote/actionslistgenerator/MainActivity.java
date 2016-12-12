@@ -61,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private List<TabataAction> resourceList;
     private HashMap<String, Boolean> resourceMap;
-    private String[] autoCompleteResources;
 
     private MediaPlayer mp;
 
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         resourceMap = new HashMap<>();
-        autoCompleteResources = new String[resourceList.size()];
+        String[] autoCompleteResources = new String[resourceList.size()];
         for (int i = 0; i < resourceList.size(); i++) {
             resourceMap.put(resourceList.get(i).getName(), false);
 
@@ -188,17 +187,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 actionsListAdapter.notifyDataSetChanged();
                 selectedListAdapter.notifyDataSetChanged();
 
-//                if (actionList.size() < 8) {
-//                    add1Button.setEnabled(true);
-//                    add8Button.setEnabled(true);
-//                    autoCompleteTextView.setEnabled(true);
-//                }
                 if (actionList.size() == 0) {
                     mp.seekTo(0);
-//                    clearButton.setEnabled(false);
-//                    playButton.setEnabled(false);
-//                    menuSaveItemStatus = false;
-//                    invalidateOptionsMenu();
                 }
                 updateButtonStatus();
             }
@@ -246,17 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//                if (actionList.size() < 8) {
-//                    add1Button.setEnabled(true);
-//                    add8Button.setEnabled(true);
-//                    autoCompleteTextView.setEnabled(true);
-//                }
-//                if (!actionList.isEmpty()) {
-//                    clearButton.setEnabled(true);
-//                }
                 playButton.setText("Play");
-//                menuLoadItemStatus = true;
-//                invalidateOptionsMenu();
                 updateButtonStatus();
             }
         });
@@ -302,44 +282,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.add_1_button:
                 addActionItemToActionList(getActionItemInRandom());
-
-//                if (actionList.size() > 7) {
-//                    add1Button.setEnabled(false);
-//                    add8Button.setEnabled(false);
-//                    autoCompleteTextView.setEnabled(false);
-//                }
-//                if (!clearButton.isEnabled()) {
-//                    clearButton.setEnabled(true);
-//                }
-//                if (!playButton.isEnabled() && canPlay) {
-//                    playButton.setEnabled(true);
-//                }
-//                if (!menuSaveItemStatus) {
-//                    menuSaveItemStatus = true;
-//                    invalidateOptionsMenu();
-//                }
                 break;
+
             case R.id.add_8_button:
                 while (actionList.size() < 8) {
                     actionList.add(getActionItemInRandom());
                 }
                 actionsListAdapter.notifyDataSetChanged();
                 selectedListAdapter.notifyDataSetChanged();
-
-//                add1Button.setEnabled(false);
-//                add8Button.setEnabled(false);
-//                autoCompleteTextView.setEnabled(false);
-//                if (!clearButton.isEnabled()) {
-//                    clearButton.setEnabled(true);
-//                }
-//                if (!playButton.isEnabled() && canPlay) {
-//                    playButton.setEnabled(true);
-//                }
-//                if (!menuSaveItemStatus) {
-//                    menuSaveItemStatus = true;
-//                    invalidateOptionsMenu();
-//                }
                 break;
+
             case R.id.clear_button:
                 mp.seekTo(0);
                 mp.pause();
@@ -349,50 +301,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 actionList.clear();
                 actionsListAdapter.notifyDataSetChanged();
                 selectedListAdapter.notifyDataSetChanged();
-
-//                clearButton.setEnabled(false);
-//                playButton.setEnabled(false);
-//                if (!add1Button.isEnabled()) {
-//                    add1Button.setEnabled(true);
-//                }
-//                if (!add8Button.isEnabled()) {
-//                    add8Button.setEnabled(true);
-//                }
-//                if (!autoCompleteTextView.isEnabled()) {
-//                    autoCompleteTextView.setEnabled(true);
-//                }
-//                if (menuSaveItemStatus) {
-//                    menuSaveItemStatus = false;
-//                    invalidateOptionsMenu();
-//                }
                 break;
+
             case R.id.play_button:
                 if (!mp.isPlaying()) {
-//                    add1Button.setEnabled(false);
-//                    add8Button.setEnabled(false);
-//                    clearButton.setEnabled(false);
-//                    menuLoadItemStatus = false;
-//                    invalidateOptionsMenu();
-//                    autoCompleteTextView.setEnabled(false);
                     playButton.setText("Pause");
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     mp.start();
                 } else {
-//                    if (actionList.size() < 8) {
-//                        add1Button.setEnabled(true);
-//                        add8Button.setEnabled(true);
-//                        autoCompleteTextView.setEnabled(true);
-//                    }
-//                    clearButton.setEnabled(true);
-//                    menuLoadItemStatus = true;
-//                    invalidateOptionsMenu();
                     playButton.setText("Play");
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
                     mp.pause();
                 }
                 break;
+
             case R.id.add_button:
                 if (actionList.size() > 7)
                     return;
@@ -407,21 +331,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
 
-//                if (actionList.size() > 7) {
-//                    add1Button.setEnabled(false);
-//                    add8Button.setEnabled(false);
-//                    autoCompleteTextView.setEnabled(false);
-//                }
-//                if (!clearButton.isEnabled()) {
-//                    clearButton.setEnabled(true);
-//                }
-//                if (!playButton.isEnabled() && canPlay) {
-//                    playButton.setEnabled(true);
-//                }
-//                if (!menuSaveItemStatus) {
-//                    menuSaveItemStatus = true;
-//                    invalidateOptionsMenu();
-//                }
         }
         updateButtonStatus();
     }
@@ -541,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        
+
                     }
                 })
                 .show();

@@ -40,7 +40,6 @@ public class EditModeActivity extends AppCompatActivity {
     private StringBuilder rootPath;
 
     private List<TabataAction> resourceList;
-    private ArrayList<File> musicFiles;
     private String[] songList;
     private String selectMusic;
     private ActionsListAdapter adapter;
@@ -136,7 +135,7 @@ public class EditModeActivity extends AppCompatActivity {
     }
 
     private void readSourceFile() {
-        musicFiles = findSong(new File(rootPath.toString()));
+        ArrayList<File> musicFiles = findSong(new File(rootPath.toString()));
         songList = new String[musicFiles.size() + 1];
         songList[0] = "<無>";
         for (int i = 0; i < musicFiles.size(); i++) {
