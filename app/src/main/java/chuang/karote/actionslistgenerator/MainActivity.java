@@ -37,8 +37,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import chuang.karote.actionslistgenerator.adapter.ActionsListAdapter;
@@ -46,10 +49,13 @@ import chuang.karote.actionslistgenerator.adapter.CheckListAdapter;
 import chuang.karote.actionslistgenerator.adapter.ContainsFilterArrayAdapter;
 import chuang.karote.actionslistgenerator.adapter.SavedActionListAdapter;
 import chuang.karote.actionslistgenerator.adapter.SelectedListAdapter;
+import chuang.karote.actionslistgenerator.model.CalenderLog;
 import chuang.karote.actionslistgenerator.model.SavedActionList;
 import chuang.karote.actionslistgenerator.model.TabataAction;
 import chuang.karote.actionslistgenerator.model.TabataConfig;
+import chuang.karote.actionslistgenerator.sqlite.CalenderLogDataAccessObject;
 import chuang.karote.actionslistgenerator.sqlite.SavedActionListDataAccessObject;
+import chuang.karote.actionslistgenerator.ui.CalenderLogFragment;
 import chuang.karote.actionslistgenerator.ui.ClearableAutoCompleteTextView;
 import utility.Util;
 
@@ -83,6 +89,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SelectedListAdapter selectedListAdapter;
     private ListView checkListView;
 
+    private CalenderLogDataAccessObject calenderLogDAO;
+    private HashMap<Date, Integer> calenderCounterMap;
+    private int counterOfToday = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +100,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mp = new MediaPlayer();
 
         savedActionListDAO = new SavedActionListDataAccessObject(MainActivity.this);
+        calenderLogDAO = new CalenderLogDataAccessObject(MainActivity.this);
+        CalenderLog todayLog = calenderLogDAO.getRecordByDate(Calendar.getInstance().getTime().getTime());
+        if (todayLog != null) {
+            counterOfToday = todayLog.getCounter();
+        }
 
         readConfig();
 
@@ -99,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
+                    case R.id.calender_dialog:
+                        showCalenderDialog();
+                        break;
                     case R.id.action_edit:
                         Intent editIntent = new Intent();
                         editIntent.setClass(MainActivity.this, EditModeActivity.class);
@@ -166,9 +184,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         actionList = new ArrayList<>();
+        calenderCounterMap = new HashMap<>();
         if (savedInstanceState != null) {
             actionList = savedInstanceState.getParcelableArrayList("actionList");
             resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
+            calenderCounterMap = (HashMap<Date, Integer>) savedInstanceState.getSerializable("calenderCounterMap");
         }
         actionsListAdapter = new ActionsListAdapter(actionList, ActionsListAdapter.ADAPTER_MODE_LIST);
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
@@ -235,6 +255,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+                counterOfToday++;
+
+                CalenderLog.Builder calenderLogBuilder = new CalenderLog.Builder();
+                CalenderLog calenderLog = calenderLogBuilder
+                        .setCalenderDate(Calendar.getInstance().getTime())
+                        .setCounter(counterOfToday)
+                        .create();
+
+                calenderLogDAO.insert(calenderLog);
+
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 playButton.setText("Play");
                 updateButtonStatus();
@@ -251,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         savedActionListDAO.close();
+        calenderLogDAO.close();
         super.onDestroy();
     }
 
@@ -258,6 +289,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("actionList", actionList);
         outState.putSerializable("resourceMap", resourceMap);
+        outState.putSerializable("calenderCounterMap", calenderCounterMap);
         super.onSaveInstanceState(outState);
     }
 
@@ -548,5 +580,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         autoCompleteTextView.setEnabled(autoCompleteTextStatus);
 
         invalidateOptionsMenu();
+    }
+
+    private void showCalenderDialog() {
+        CalenderLogFragment dialogCaldroidFragment = new CalenderLogFragment();
+        Map<String, Object> extraData = dialogCaldroidFragment.getExtraData();
+        extraData.put("calenderLogMap", calenderLogDAO.getAll());
+//        dialogCaldroidFragment.setCaldroidListener(listener);
+
+        final String dialogTag = "CALDROID_DIALOG_FRAGMENT";
+//        Bundle bundle = new Bundle();
+//        dialogCaldroidFragment.setArguments(bundle);
+
+        dialogCaldroidFragment.show(getSupportFragmentManager(), dialogTag);
     }
 }
