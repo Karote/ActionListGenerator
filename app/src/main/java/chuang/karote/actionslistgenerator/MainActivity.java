@@ -36,11 +36,13 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -90,8 +92,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ListView checkListView;
 
     private CalenderLogDataAccessObject calenderLogDAO;
-    private HashMap<Date, Integer> calenderCounterMap;
     private int counterOfToday = 0;
+    private CalenderLogFragment dialogCaldroidFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         savedActionListDAO = new SavedActionListDataAccessObject(MainActivity.this);
         calenderLogDAO = new CalenderLogDataAccessObject(MainActivity.this);
-        CalenderLog todayLog = calenderLogDAO.getRecordByDate(Calendar.getInstance().getTime().getTime());
+        CalenderLog todayLog = calenderLogDAO.getRecordByDate(getTodayDate());
         if (todayLog != null) {
             counterOfToday = todayLog.getCounter();
         }
@@ -184,11 +186,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         actionList = new ArrayList<>();
-        calenderCounterMap = new HashMap<>();
         if (savedInstanceState != null) {
             actionList = savedInstanceState.getParcelableArrayList("actionList");
             resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
-            calenderCounterMap = (HashMap<Date, Integer>) savedInstanceState.getSerializable("calenderCounterMap");
         }
         actionsListAdapter = new ActionsListAdapter(actionList, ActionsListAdapter.ADAPTER_MODE_LIST);
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 CalenderLog.Builder calenderLogBuilder = new CalenderLog.Builder();
                 CalenderLog calenderLog = calenderLogBuilder
-                        .setCalenderDate(Calendar.getInstance().getTime())
+                        .setCalenderDate(getTodayDate())
                         .setCounter(counterOfToday)
                         .create();
 
@@ -268,6 +268,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 playButton.setText("Play");
                 updateButtonStatus();
+
+                showCalenderDialog();
             }
         });
 
@@ -289,7 +291,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("actionList", actionList);
         outState.putSerializable("resourceMap", resourceMap);
-        outState.putSerializable("calenderCounterMap", calenderCounterMap);
+        if (dialogCaldroidFragment != null && dialogCaldroidFragment.isVisible()) {
+            dialogCaldroidFragment.dismiss();
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -583,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showCalenderDialog() {
-        CalenderLogFragment dialogCaldroidFragment = new CalenderLogFragment();
+        dialogCaldroidFragment = new CalenderLogFragment();
         Map<String, Object> extraData = dialogCaldroidFragment.getExtraData();
         extraData.put("calenderLogMap", calenderLogDAO.getAll());
 //        dialogCaldroidFragment.setCaldroidListener(listener);
@@ -593,5 +597,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        dialogCaldroidFragment.setArguments(bundle);
 
         dialogCaldroidFragment.show(getSupportFragmentManager(), dialogTag);
+    }
+
+    private Date getTodayDate() {
+        Date todayDate = new Date(System.currentTimeMillis());
+        SimpleDateFormat justDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String justDateOfTodayString = justDateFormat.format(todayDate);
+        Date justDateOfTodayDate = new Date();
+        try {
+            justDateOfTodayDate = justDateFormat.parse(justDateOfTodayString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return justDateOfTodayDate;
     }
 }

@@ -5,13 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import chuang.karote.actionslistgenerator.model.CalenderLog;
-import chuang.karote.actionslistgenerator.model.SavedActionList;
 
 /**
  * Created by karot.chuang on 2016/8/30.
@@ -96,9 +93,9 @@ public class CalenderLogDataAccessObject {
         return item;
     }
 
-    public CalenderLog getRecordByDate(long date) {
+    public CalenderLog getRecordByDate(Date date) {
         CalenderLog item = null;
-        String where = COLUMN_CALENDER_DATE + "=" + date;
+        String where = COLUMN_CALENDER_DATE + "=" + date.getTime();
 
         Cursor result = db.query(TABLE_NAME, null, where, null, null, null, null, null);
 
