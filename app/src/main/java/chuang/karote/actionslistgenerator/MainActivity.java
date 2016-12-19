@@ -330,7 +330,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.clear_button:
                 mp.seekTo(0);
-                mp.pause();
                 for (TabataAction listItem : resourceList) {
                     resourceMap.put(listItem.getName(), false);
                 }
