@@ -6,27 +6,29 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 /**
  * Created by karot.chuang on 2016/11/8.
  */
 
-public class TabataAction implements Parcelable{
+public class TabataAction implements Parcelable {
     @Expose
     @SerializedName("name")
     private String name;
 
     @Expose
-    @SerializedName("description")
-    private String description;
+    @SerializedName("pictures")
+    private List<String> pictures;
 
-    public TabataAction(String name, String description) {
+    public TabataAction(String name, List<String> pictures) {
         this.name = name;
-        this.description = description;
+        this.pictures = pictures;
     }
 
     protected TabataAction(Parcel in) {
         name = in.readString();
-        description = in.readString();
+        pictures = in.createStringArrayList();
     }
 
     public static final Creator<TabataAction> CREATOR = new Creator<TabataAction>() {
@@ -45,8 +47,8 @@ public class TabataAction implements Parcelable{
         return name;
     }
 
-    public String getDescription() {
-        return description;
+    public List<String> getPictures() {
+        return pictures;
     }
 
     @Override
@@ -55,8 +57,8 @@ public class TabataAction implements Parcelable{
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(name);
-        parcel.writeString(description);
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeStringList(pictures);
     }
 }

@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,12 +20,14 @@ import android.widget.Spinner;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.matthewtamlin.sliding_intro_screen_library.indicators.DotIndicator;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import chuang.karote.actionslistgenerator.adapter.ActionsListAdapter;
+import chuang.karote.actionslistgenerator.adapter.PictureEditPagerAdapter;
 import chuang.karote.actionslistgenerator.model.TabataAction;
 import chuang.karote.actionslistgenerator.model.TabataConfig;
 import utility.Util;
@@ -43,6 +46,7 @@ public class EditModeActivity extends AppCompatActivity {
     private String[] songList;
     private String selectMusic;
     private ActionsListAdapter adapter;
+    private DotIndicator indicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,13 +178,20 @@ public class EditModeActivity extends AppCompatActivity {
     private void showAddDialog() {
         final Dialog addDialog = new Dialog(this);
         addDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        addDialog.setCanceledOnTouchOutside(true);
+        addDialog.setCanceledOnTouchOutside(false);
         addDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         addDialog.setContentView(R.layout.popupdialog_add_action_item);
         addDialog.show();
 
         final EditText actionName = (EditText) addDialog.findViewById(R.id.edit_text_action_name);
-        final EditText actionDescription = (EditText) addDialog.findViewById(R.id.edit_text_action_description);
+        final ViewPager viewPager = (ViewPager) addDialog.findViewById(R.id.view_pager);
+        List<String> pictureList = new ArrayList<>();
+        PictureEditPagerAdapter pictureEditPagerAdapter = new PictureEditPagerAdapter(pictureList);
+        pictureEditPagerAdapter.setOnPictureClickListener(onPictureClickListener);
+        viewPager.setAdapter(pictureEditPagerAdapter);
+        viewPager.addOnPageChangeListener(onPageChangeListener);
+        indicator = (DotIndicator) addDialog.findViewById(R.id.dot_indicator);
+        indicator.setNumberOfItems(viewPager.getAdapter().getCount());
         addDialog.findViewById(R.id.button_add_action_item_ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -189,8 +200,8 @@ public class EditModeActivity extends AppCompatActivity {
                     if (!checkInputActionName(actionNameString)) {
                         Util.showShortToast(EditModeActivity.this, "動作名稱重覆");
                     } else {
-                        TabataAction newAction = new TabataAction(actionNameString, actionDescription.getText().toString());
-                        resourceList.add(newAction);
+//                        TabataAction newAction = new TabataAction(actionNameString, "");
+//                        resourceList.add(newAction);
                         adapter.notifyDataSetChanged();
                         addDialog.dismiss();
                     }
@@ -204,22 +215,28 @@ public class EditModeActivity extends AppCompatActivity {
     private void showEditDialog(final int resourceIndex) {
         final Dialog editDialog = new Dialog(this);
         editDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        editDialog.setCanceledOnTouchOutside(true);
+        editDialog.setCanceledOnTouchOutside(false);
         editDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         editDialog.setContentView(R.layout.popupdialog_add_action_item);
         editDialog.show();
 
         final EditText actionName = (EditText) editDialog.findViewById(R.id.edit_text_action_name);
-        final EditText actionDescription = (EditText) editDialog.findViewById(R.id.edit_text_action_description);
+        final ViewPager viewPager = (ViewPager) editDialog.findViewById(R.id.view_pager);
+        List<String> pictureList = new ArrayList<>();
+        PictureEditPagerAdapter editPagerAdapter = new PictureEditPagerAdapter(pictureList);
+        editPagerAdapter.setOnPictureClickListener(onPictureClickListener);
+        viewPager.setAdapter(editPagerAdapter);
+        viewPager.addOnPageChangeListener(onPageChangeListener);
+        indicator = (DotIndicator) editDialog.findViewById(R.id.dot_indicator);
+        indicator.setNumberOfItems(viewPager.getAdapter().getCount());
 
         actionName.setText(resourceList.get(resourceIndex).getName());
         actionName.setEnabled(false);
-        actionDescription.setText(resourceList.get(resourceIndex).getDescription());
         editDialog.findViewById(R.id.button_add_action_item_ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                TabataAction newAction = new TabataAction(resourceList.get(resourceIndex).getName(), actionDescription.getText().toString());
-                resourceList.set(resourceIndex, newAction);
+//                TabataAction newAction = new TabataAction(resourceList.get(resourceIndex).getName(), "");
+//                resourceList.set(resourceIndex, newAction);
                 adapter.notifyDataSetChanged();
                 editDialog.dismiss();
             }
@@ -251,4 +268,33 @@ public class EditModeActivity extends AppCompatActivity {
         }
         return true;
     }
+
+    ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            indicator.setSelectedItem(position, true);
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
+    };
+
+    PictureEditPagerAdapter.OnPictureClickListener onPictureClickListener = new PictureEditPagerAdapter.OnPictureClickListener() {
+        @Override
+        public void onAddPictureClicked() {
+
+        }
+
+        @Override
+        public void onDeletePictureClicked() {
+
+        }
+    };
 }

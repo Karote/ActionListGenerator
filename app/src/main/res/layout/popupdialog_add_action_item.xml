@@ -29,22 +29,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:text="動作描述："
+        android:text="照片："
         android:textColor="@android:color/black"
         android:textSize="18sp" />
 
-    <EditText
-        android:id="@+id/edit_text_action_description"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
-        android:layout_height="100sp"
-        android:layout_gravity="top|start"
-        android:layout_margin="5dp"
-        android:background="@android:color/white"
-        android:gravity="top|left"
-        android:inputType="textMultiLine"
-        android:scrollbars="vertical"
-        android:textColor="@android:color/black"
-        android:textSize="18sp" />
+        android:layout_height="200dp" />
+
+    <com.matthewtamlin.sliding_intro_screen_library.indicators.DotIndicator
+        android:id="@+id/dot_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" />
 
     <Button
         android:id="@+id/button_add_action_item_ok"

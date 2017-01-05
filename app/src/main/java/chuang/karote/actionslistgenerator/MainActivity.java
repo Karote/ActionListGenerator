@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -32,6 +33,7 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.matthewtamlin.sliding_intro_screen_library.indicators.DotIndicator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,6 +51,7 @@ import java.util.Random;
 import chuang.karote.actionslistgenerator.adapter.ActionsListAdapter;
 import chuang.karote.actionslistgenerator.adapter.CheckListAdapter;
 import chuang.karote.actionslistgenerator.adapter.ContainsFilterArrayAdapter;
+import chuang.karote.actionslistgenerator.adapter.PictureViewPagerAdapter;
 import chuang.karote.actionslistgenerator.adapter.SavedActionListAdapter;
 import chuang.karote.actionslistgenerator.adapter.SelectedListAdapter;
 import chuang.karote.actionslistgenerator.model.CalenderLog;
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CalenderLogDataAccessObject calenderLogDAO;
     private int counterOfToday = 0;
     private CalenderLogFragment dialogCaldroidFragment;
+    private DotIndicator indicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getDescription());
+                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
             }
 
             @Override
@@ -220,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         selectedListAdapter.setOnItemClickListener(new SelectedListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getDescription());
+                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
             }
         });
         selectedListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
@@ -452,14 +456,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return resourceList.get(index);
     }
 
-    private void showDetailDialog(String actionName, String description) {
+    private void showDetailDialog(String actionName, List<String> pictures) {
         final Dialog detailDialog = new Dialog(this);
         detailDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         detailDialog.setCanceledOnTouchOutside(true);
         detailDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         detailDialog.setContentView(R.layout.popupdialog_action_detail);
         ((TextView) detailDialog.findViewById(R.id.action_name)).setText(actionName);
-        ((TextView) detailDialog.findViewById(R.id.description_text)).setText(description);
+        ViewPager viewPager = (ViewPager) detailDialog.findViewById(R.id.view_pager);
+//        viewPager.setAdapter(new PictureViewPagerAdapter(pictures));
+        List<String> pictureList = new ArrayList<>();
+        pictureList.add("dgjpeg.jpg");
+        pictureList.add("dgjpeg (1).jpg");
+        viewPager.setAdapter(new PictureViewPagerAdapter(pictureList));
+        viewPager.addOnPageChangeListener(onPageChangeListener);
+        indicator = (DotIndicator) detailDialog.findViewById(R.id.dot_indicator);
+        indicator.setNumberOfItems(pictureList.size());
         detailDialog.show();
 
         detailDialog.findViewById(R.id.close_btn).setOnClickListener(new View.OnClickListener() {
@@ -469,6 +481,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
+    ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            indicator.setSelectedItem(position, true);
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
+    };
 
     private void showSaveListNameDialog() {
         final View saveListNameView = LayoutInflater.from(MainActivity.this).inflate(R.layout.popupdialog_save_list, null);
