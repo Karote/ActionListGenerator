@@ -118,4 +118,13 @@ public class CalenderLogDataAccessObject {
         cursor.close();
         return result;
     }
+
+    public boolean update(CalenderLog item) {
+        ContentValues cv = new ContentValues();
+
+        cv.put(COLUMN_CALENDER_DATE, item.getCalenderDate().getTime());
+        cv.put(COLUMN_COUNTER, item.getCounter());
+        String where = KEY_ID + "=" + item.getId();
+        return db.update(TABLE_NAME, cv, where, null) > 0;
+    }
 }

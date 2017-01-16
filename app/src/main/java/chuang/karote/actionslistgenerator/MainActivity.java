@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int counterOfToday = 0;
     private CalenderLogFragment dialogCaldroidFragment;
     private DotIndicator indicator;
+    private CalenderLog todayLog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         savedActionListDAO = new SavedActionListDataAccessObject(MainActivity.this);
         calenderLogDAO = new CalenderLogDataAccessObject(MainActivity.this);
-        CalenderLog todayLog = calenderLogDAO.getRecordByDate(getTodayDate());
+        todayLog = calenderLogDAO.getRecordByDate(getTodayDate());
         if (todayLog != null) {
             counterOfToday = todayLog.getCounter();
         }
@@ -261,15 +262,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onCompletion(MediaPlayer mediaPlayer) {
                 counterOfToday++;
 
-                CalenderLog.Builder calenderLogBuilder = new CalenderLog.Builder();
-                CalenderLog calenderLog = calenderLogBuilder
-                        .setCalenderDate(getTodayDate())
-                        .setCounter(counterOfToday)
-                        .create();
-
-                calenderLogDAO.insert(calenderLog);
+                if (todayLog == null) {
+                    CalenderLog.Builder calenderLogBuilder = new CalenderLog.Builder();
+                    todayLog = calenderLogBuilder
+                            .setCalenderDate(getTodayDate())
+                            .setCounter(counterOfToday)
+                            .create();
+                    calenderLogDAO.insert(todayLog);
+                } else {
+                    todayLog.setCounter(counterOfToday);
+                    calenderLogDAO.update(todayLog);
+                }
 
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
                 playButton.setText("Play");
                 updateButtonStatus();
 
