@@ -59,6 +59,8 @@ public class CalenderLogAdapter extends CaldroidGridAdapter {
 
         Date calendarDate = CalendarHelper.convertDateTimeToDate(dateTime);
 
+        counterLayout.setVisibility(View.INVISIBLE);
+        counterTextView.setText("");
         if (calenderCounterMap.containsKey(calendarDate)) {
             int counter = calenderCounterMap.get(calendarDate);
             if (counter > 0) {
