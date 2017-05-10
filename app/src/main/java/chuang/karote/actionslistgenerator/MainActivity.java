@@ -106,156 +106,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         mp = new MediaPlayer();
 
-        savedActionListDAO = new SavedActionListDataAccessObject(MainActivity.this);
-        calenderLogDAO = new CalenderLogDataAccessObject(MainActivity.this);
-        todayLog = calenderLogDAO.getRecordByDate(getTodayDate());
-        if (todayLog != null) {
-            counterOfToday = todayLog.getCounter();
-        }
-
+        readDatabase();
         readConfig();
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
-        setSupportActionBar(toolbar);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.calender_dialog:
-                        showCalenderDialog();
-                        break;
-                    case R.id.action_edit:
-                        Intent editIntent = new Intent();
-                        editIntent.setClass(MainActivity.this, EditModeActivity.class);
-                        startActivity(editIntent);
-                        MainActivity.this.finish();
-                        break;
-                    case R.id.action_save:
-                        showSaveListNameDialog();
-                        break;
-                    case R.id.action_load:
-                        showLoadListDialog();
-                        break;
-                }
-                return true;
-            }
-        });
-
+        setupToolbar();
         initView();
-
-        if (resourceList == null) {
-            add1Button.setEnabled(false);
-            add8Button.setEnabled(false);
-            clearButton.setEnabled(false);
-            playButton.setEnabled(false);
-            menuLoadItemStatus = false;
-            autoCompleteTextView.setEnabled(false);
-            Util.showLongToast(this, CONFIG_FILE_NAME + " open fail");
-            return;
-        }
-
-        resourceMap = new HashMap<>();
-        String[] autoCompleteResources = new String[resourceList.size()];
-        for (int i = 0; i < resourceList.size(); i++) {
-            resourceMap.put(resourceList.get(i).getName(), false);
-
-            autoCompleteResources[i] = resourceList.get(i).getName();
-        }
-
-        ContainsFilterArrayAdapter<String> autoCompleteAdapter = new ContainsFilterArrayAdapter<>(this, android.R.layout.simple_list_item_1, autoCompleteResources);
-        autoCompleteTextView.setAdapter(autoCompleteAdapter);
-        autoCompleteTextView.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                String inputString = editable.toString();
-                if (checkInputInResourceList(inputString)) {
-                    if (!checkInputInActionList(inputString)) {
-                        addButton.setEnabled(true);
-                    } else {
-                        addButton.setEnabled(false);
-                    }
-                } else {
-                    addButton.setEnabled(false);
-                }
-            }
-        });
-
-        actionList = new ArrayList<>();
-        if (savedInstanceState != null) {
-            actionList = savedInstanceState.getParcelableArrayList("actionList");
-            resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
-        }
-        actionsListAdapter = new ActionsListAdapter(actionList, ActionsListAdapter.ADAPTER_MODE_LIST);
-        actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
-            }
-
-            @Override
-            public void onItemDeleteClick(int position) {
-                if (mp.isPlaying()) {
-                    return;
-                }
-                resourceMap.put(actionList.get(position).getName(), false);
-                actionList.remove(position);
-                actionsListAdapter.notifyDataSetChanged();
-                selectedListAdapter.notifyDataSetChanged();
-
-                if (actionList.size() == 0) {
-                    mp.seekTo(0);
-                }
-                updateButtonStatus();
-            }
-        });
-        actionsListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        actionsListRecyclerView.setAdapter(actionsListAdapter);
-
-        selectedListAdapter = new SelectedListAdapter(actionList);
-        selectedListAdapter.setOnItemClickListener(new SelectedListAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
-            }
-        });
-        selectedListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        selectedListRecyclerView.setAdapter(selectedListAdapter);
-
-        CheckListAdapter checkListAdapter = new CheckListAdapter(MainActivity.this, resourceList, resourceMap);
-        checkListView.setAdapter(checkListAdapter);
-        checkListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                CheckedTextView chkItem = (CheckedTextView) view.findViewById(R.id.action_name);
-                if (actionList.size() > 7 && !chkItem.isChecked()) {
-                    return;
-                }
-                chkItem.setChecked(!chkItem.isChecked());
-                resourceMap.put(resourceList.get(i).getName(), chkItem.isChecked());
-                if (chkItem.isChecked()) {
-                    addActionItemToActionList(resourceList.get(i));
-                } else {
-                    for (int i1 = 0; i1 < actionList.size(); i1++) {
-                        if (actionList.get(i1).getName().equals(resourceList.get(i).getName())) {
-                            actionList.remove(i1);
-                            actionsListAdapter.notifyDataSetChanged();
-                            selectedListAdapter.notifyDataSetChanged();
-                            return;
-                        }
-                    }
-                }
-            }
-        });
 
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -283,7 +137,225 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        if (resourceList == null) {
+            add1Button.setEnabled(false);
+            add8Button.setEnabled(false);
+            clearButton.setEnabled(false);
+            playButton.setEnabled(false);
+            menuLoadItemStatus = false;
+            autoCompleteTextView.setEnabled(false);
+            Util.showLongToast(this, CONFIG_FILE_NAME + " open fail");
+            return;
+        }
+        initAutoCompleteTextView();
+
+        actionList = new ArrayList<>();
+        if (savedInstanceState != null) {
+            actionList = savedInstanceState.getParcelableArrayList("actionList");
+            resourceMap = (HashMap<String, Boolean>) savedInstanceState.getSerializable("resourceMap");
+        }
         updateButtonStatus();
+
+        initList();
+    }
+
+    private void readDatabase() {
+        savedActionListDAO = new SavedActionListDataAccessObject(MainActivity.this);
+        calenderLogDAO = new CalenderLogDataAccessObject(MainActivity.this);
+        todayLog = calenderLogDAO.getRecordByDate(getTodayDate());
+        if (todayLog != null) {
+            counterOfToday = todayLog.getCounter();
+        }
+    }
+
+    private void readConfig() {
+        StringBuilder stringBuilder = new StringBuilder(Environment.getExternalStorageDirectory().getAbsolutePath());
+        StringBuilder rootPath = stringBuilder.append(File.separatorChar).append(APP_FOLDER_NAME);
+        String json = getJson(rootPath.toString(), CONFIG_FILE_NAME);
+        try {
+            if (json != null) {
+                Gson gson = new Gson();
+                TabataConfig config = gson.fromJson(json, TabataConfig.class);
+                String musicPath = rootPath.append(File.separator).append(config.getMusic()).toString();
+                try {
+                    mp.setDataSource(musicPath);
+                    mp.setLooping(false);
+                    mp.prepare();
+                } catch (FileNotFoundException e) {
+                    canPlay = false;
+                    e.printStackTrace();
+                } catch (IllegalArgumentException | IllegalStateException | IOException e) {
+                    e.printStackTrace();
+                }
+                resourceList = config.getActions();
+            }
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+            final String message = APP_FOLDER_NAME + "/" + CONFIG_FILE_NAME + " 檔案格式有誤，請檢查修正！";
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Util.showLongToast(getBaseContext(), message);
+                }
+            });
+        }
+    }
+
+    private void setupToolbar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.calender_dialog:
+                        showCalenderDialog();
+                        break;
+                    case R.id.action_edit:
+                        Intent editIntent = new Intent();
+                        editIntent.setClass(MainActivity.this, EditModeActivity.class);
+                        startActivity(editIntent);
+                        MainActivity.this.finish();
+                        break;
+                    case R.id.action_save:
+                        showSaveListNameDialog();
+                        break;
+                    case R.id.action_load:
+                        showLoadListDialog();
+                        break;
+                }
+                return true;
+            }
+        });
+    }
+
+    private void initView() {
+        autoCompleteTextView = (ClearableAutoCompleteTextView) findViewById(R.id.search_ac_textview);
+        addButton = (Button) findViewById(R.id.add_button);
+        actionsListRecyclerView = (RecyclerView) findViewById(R.id.action_list);
+        selectedListRecyclerView = (RecyclerView) findViewById(R.id.selected_list);
+        checkListView = (ListView) findViewById(R.id.check_list);
+        add1Button = (Button) findViewById(R.id.add_1_button);
+        add8Button = (Button) findViewById(R.id.add_8_button);
+        clearButton = (Button) findViewById(R.id.clear_button);
+        playButton = (Button) findViewById(R.id.play_button);
+
+        addButton.setOnClickListener(this);
+        add1Button.setOnClickListener(this);
+        add8Button.setOnClickListener(this);
+        clearButton.setOnClickListener(this);
+        playButton.setOnClickListener(this);
+    }
+
+    private void initAutoCompleteTextView() {
+        resourceMap = new HashMap<>();
+        String[] autoCompleteResources = new String[resourceList.size()];
+        for (int i = 0; i < resourceList.size(); i++) {
+            resourceMap.put(resourceList.get(i).getName(), false);
+
+            autoCompleteResources[i] = resourceList.get(i).getName();
+        }
+
+        ContainsFilterArrayAdapter<String> autoCompleteAdapter = new ContainsFilterArrayAdapter<>(this, android.R.layout.simple_list_item_1, autoCompleteResources);
+        autoCompleteTextView.setAdapter(autoCompleteAdapter);
+        autoCompleteTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String inputString = editable.toString();
+                if (checkInputInResourceList(inputString)) {
+                    if (!resourceMap.get(inputString)) {
+                        addButton.setEnabled(true);
+                    } else {
+                        addButton.setEnabled(false);
+                    }
+                } else {
+                    addButton.setEnabled(false);
+                }
+            }
+        });
+    }
+
+    private void initList() {
+        // ----------------
+        // actionList
+        // ----------------
+        actionsListAdapter = new ActionsListAdapter(actionList, ActionsListAdapter.ADAPTER_MODE_LIST);
+        actionsListAdapter.setOnItemClickListener(new ActionsListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
+            }
+
+            @Override
+            public void onItemDeleteClick(int position) {
+                if (mp.isPlaying()) {
+                    return;
+                }
+                resourceMap.put(actionList.get(position).getName(), false);
+                actionList.remove(position);
+                actionsListAdapter.notifyDataSetChanged();
+                selectedListAdapter.notifyDataSetChanged();
+
+                if (actionList.size() == 0) {
+                    mp.seekTo(0);
+                }
+                updateButtonStatus();
+            }
+        });
+        actionsListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        actionsListRecyclerView.setAdapter(actionsListAdapter);
+
+        // ----------------
+        // selectedList
+        // ----------------
+        selectedListAdapter = new SelectedListAdapter(actionList);
+        selectedListAdapter.setOnItemClickListener(new SelectedListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                showDetailDialog(actionList.get(position).getName(), actionList.get(position).getPictures());
+            }
+        });
+        selectedListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        selectedListRecyclerView.setAdapter(selectedListAdapter);
+
+        // ----------------
+        // checkList
+        // ----------------
+        CheckListAdapter checkListAdapter = new CheckListAdapter(MainActivity.this, resourceList, resourceMap);
+        checkListView.setAdapter(checkListAdapter);
+        checkListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                CheckedTextView chkItem = (CheckedTextView) view.findViewById(R.id.action_name);
+                if (actionList.size() > 7 && !chkItem.isChecked()) {
+                    return;
+                }
+                chkItem.setChecked(!chkItem.isChecked());
+                resourceMap.put(resourceList.get(i).getName(), chkItem.isChecked());
+                if (chkItem.isChecked()) {
+                    addActionItemToActionList(resourceList.get(i));
+                } else {
+                    for (int i1 = 0; i1 < actionList.size(); i1++) {
+                        if (actionList.get(i1).getName().equals(resourceList.get(i).getName())) {
+                            actionList.remove(i1);
+                            actionsListAdapter.notifyDataSetChanged();
+                            selectedListAdapter.notifyDataSetChanged();
+                            return;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -380,69 +452,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateButtonStatus();
     }
 
-    private void readConfig() {
-        StringBuilder stringBuilder = new StringBuilder(Environment.getExternalStorageDirectory().getAbsolutePath());
-        StringBuilder rootPath = stringBuilder.append(File.separatorChar).append(APP_FOLDER_NAME);
-        String json = getJson(rootPath.toString(), CONFIG_FILE_NAME);
-        try {
-            if (json != null) {
-                Gson gson = new Gson();
-                TabataConfig config = gson.fromJson(json, TabataConfig.class);
-                String musicPath = rootPath.append(File.separator).append(config.getMusic()).toString();
-                try {
-                    mp.setDataSource(musicPath);
-                    mp.setLooping(false);
-                    mp.prepare();
-                } catch (FileNotFoundException e) {
-                    canPlay = false;
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                resourceList = config.getActions();
-            }
-        } catch (JsonSyntaxException e) {
-            e.printStackTrace();
-            toastJsonFormatError(APP_FOLDER_NAME);
-        }
-    }
-
     private static String getJson(String dirPath, String fileName) {
         String json = Util.readFile(dirPath, fileName);
         return json.isEmpty() ? null : json;
     }
 
-    private void toastJsonFormatError(String path) {
-        final String message = path + "/" + CONFIG_FILE_NAME + " 檔案格式有誤，請檢查修正！";
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Util.showLongToast(getBaseContext(), message);
-            }
-        });
-    }
-
-    private void initView() {
-        autoCompleteTextView = (ClearableAutoCompleteTextView) findViewById(R.id.search_ac_textview);
-        addButton = (Button) findViewById(R.id.add_button);
-        actionsListRecyclerView = (RecyclerView) findViewById(R.id.action_list);
-        selectedListRecyclerView = (RecyclerView) findViewById(R.id.selected_list);
-        checkListView = (ListView) findViewById(R.id.check_list);
-        add1Button = (Button) findViewById(R.id.add_1_button);
-        add8Button = (Button) findViewById(R.id.add_8_button);
-        clearButton = (Button) findViewById(R.id.clear_button);
-        playButton = (Button) findViewById(R.id.play_button);
-
-        addButton.setOnClickListener(this);
-        add1Button.setOnClickListener(this);
-        add8Button.setOnClickListener(this);
-        clearButton.setOnClickListener(this);
-        playButton.setOnClickListener(this);
-    }
 
     private void addActionItemToActionList(TabataAction actionItem) {
         actionList.add(actionItem);
@@ -475,7 +489,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pictureList.add("dgjpeg.jpg");
         pictureList.add("dgjpeg (1).jpg");
         viewPager.setAdapter(new PictureViewPagerAdapter(pictureList));
-        viewPager.addOnPageChangeListener(onPageChangeListener);
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                indicator.setSelectedItem(position, true);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
         indicator = (DotIndicator) detailDialog.findViewById(R.id.dot_indicator);
         indicator.setNumberOfItems(pictureList.size());
         detailDialog.show();
@@ -487,23 +516,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-
-    ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
-        @Override
-        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-        }
-
-        @Override
-        public void onPageSelected(int position) {
-            indicator.setSelectedItem(position, true);
-        }
-
-        @Override
-        public void onPageScrollStateChanged(int state) {
-
-        }
-    };
 
     private void showSaveListNameDialog() {
         final View saveListNameView = LayoutInflater.from(MainActivity.this).inflate(R.layout.popupdialog_save_list, null);
@@ -585,10 +597,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
         }
         return false;
-    }
-
-    private boolean checkInputInActionList(String input) {
-        return resourceMap.get(input);
     }
 
     private void saveCurrentListToSqlite(String listName) {
